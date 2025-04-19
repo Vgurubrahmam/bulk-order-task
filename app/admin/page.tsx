@@ -211,7 +211,7 @@ export default function AdminPage() {
                 <div key={product.id} className="grid grid-cols-12 gap-4 border-t p-4 items-center">
                   <div className="col-span-1">{product.id}</div>
                   <div className="col-span-5 font-medium">{product.name}</div>
-                  <div className="col-span-2 text-right">${product.price.toFixed(2)}</div>
+                  <div className="col-span-2 text-right">${product.price}</div>
                   <div className="col-span-4 flex justify-end gap-2">
                     <Button asChild variant="outline" size="sm">
                       <Link href={`/admin/products/${product.id}`}>Edit</Link>

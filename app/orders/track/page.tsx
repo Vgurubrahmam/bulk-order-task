@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -64,7 +65,23 @@ export default function TrackOrderPage() {
       }
 
       const data = await response.json()
+      console.log("API Response:", data) // Debug: Log raw API data
+
+      // Parse price in items to ensure it's a number
+      data.items = data.items.map((item: OrderItem) => ({
+        ...item,
+        price: typeof item.price === "string" ? parseFloat(item.price) : item.price,
+      }))
+
+      // Validate prices to avoid NaN
+      const invalidItems = data.items.filter((item: OrderItem) => isNaN(item.price))
+      if (invalidItems.length > 0) {
+        console.error("Invalid prices found in items:", invalidItems)
+        throw new Error("Some order items have invalid prices")
+      }
+
       setOrder(data)
+      console.log("Order State:", data) // Debug: Log processed order
 
       // Update URL with order ID for sharing
       if (id !== initialOrderId) {

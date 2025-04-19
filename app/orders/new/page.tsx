@@ -1,3 +1,4 @@
+
 "use client"
 
 import { useEffect, useState } from "react"
@@ -75,12 +76,27 @@ export default function NewOrderPage() {
         let data
         try {
           data = await response.json()
+          console.log("API Response:", data) // Debug: Log raw API data
         } catch (jsonError) {
           console.error("Failed to parse response as JSON:", jsonError)
           throw new Error("Invalid response format from server")
         }
 
+        // Parse price to ensure it's a number
+        data = data.map((product: Product) => ({
+          ...product,
+          price: typeof product.price === "string" ? parseFloat(product.price) : product.price,
+        }))
+
+        // Validate prices to avoid NaN
+        const invalidProducts = data.filter((p: Product) => isNaN(p.price))
+        if (invalidProducts.length > 0) {
+          console.error("Invalid prices found:", invalidProducts)
+          throw new Error("Some products have invalid prices")
+        }
+
         setProducts(data)
+        console.log("Products State (API):", data) // Debug: Log processed products
 
         // If a product was preselected, add it to the order
         if (preselectedProductId) {
@@ -95,6 +111,7 @@ export default function NewOrderPage() {
 
         // Use fallback data
         setProducts(fallbackProducts)
+        console.log("Products State (Fallback):", fallbackProducts) // Debug: Log fallback products
         setDemoMode(true)
 
         // If a product was preselected, try to add it from fallback data

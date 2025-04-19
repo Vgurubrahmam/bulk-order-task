@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useEffect, useState, use } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -14,7 +14,7 @@ interface OrderItem {
   id: number
   product_id: number
   product_name: string
-  price: number
+  price: number | string
   quantity: number
 }
 
@@ -28,7 +28,9 @@ interface Order {
   items: OrderItem[]
 }
 
-export default function OrderDetailPage({ params }: { params: { id: string } }) {
+export default function OrderDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  // Unwrap params using React.use()
+  const { id } = use(params)
   const router = useRouter()
   const [order, setOrder] = useState<Order | null>(null)
   const [loading, setLoading] = useState(true)
@@ -37,14 +39,14 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
 
   useEffect(() => {
     fetchOrder()
-  }, [])
+  }, [id]) // Add id as dependency
 
   const fetchOrder = async () => {
     setLoading(true)
     setError(null)
 
     try {
-      const response = await fetch(`/api/orders/${params.id}`)
+      const response = await fetch(`/api/orders/${id}`)
       if (!response.ok) {
         if (response.status === 404) {
           throw new Error("Order not found")
@@ -114,7 +116,7 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
   }
 
   const calculateTotal = (items: OrderItem[]) => {
-    return items.reduce((total, item) => total + item.price * item.quantity, 0)
+    return items.reduce((total, item) => total + (typeof item.price === "string" ? parseFloat(item.price) : item.price) * item.quantity, 0)
   }
 
   if (loading) {
@@ -209,16 +211,19 @@ export default function OrderDetailPage({ params }: { params: { id: string } }) 
               <div className="col-span-2 text-right">Total</div>
             </div>
             <Separator />
-            {order.items.map((item) => (
+            {order.items.map((item) => {
+              const price= typeof item.price==="string"? parseFloat(item.price):item.price
+              return (
               <div key={item.id} className="grid grid-cols-12 gap-4 p-4">
                 <div className="col-span-6">
                   <p className="font-medium">{item.product_name}</p>
                 </div>
-                <div className="col-span-2 text-right">${item.price.toFixed(2)}</div>
+                <div className="col-span-2 text-right">${price.toFixed(2)}</div>
                 <div className="col-span-2 text-right">{item.quantity}</div>
-                <div className="col-span-2 text-right font-medium">${(item.price * item.quantity).toFixed(2)}</div>
+                <div className="col-span-2 text-right font-medium">${(price * item.quantity).toFixed(2)}</div>
               </div>
-            ))}
+              )
+})}
             <Separator />
             <div className="grid grid-cols-12 gap-4 p-4">
               <div className="col-span-10 text-right font-bold">Order Total:</div>

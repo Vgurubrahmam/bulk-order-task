@@ -61,17 +61,26 @@ export default function ProductsPage() {
       let data
       try {
         data = await response.json()
+        console.log("API Response:", data) // Debug: Log raw API data
       } catch (jsonError) {
         console.error("Failed to parse response as JSON:", jsonError)
         throw new Error("Invalid response format from server")
       }
 
+      // Parse price to ensure it's a number
+      data = data.map((product: Product) => ({
+        ...product,
+        price: typeof product.price === "string" ? parseFloat(product.price) : product.price,
+      }))
+
       setProducts(data)
+      console.log("Products State (API):", data) // Debug: Log processed products
     } catch (err) {
       console.error("Error fetching products:", err)
 
       // Use fallback data
       setProducts(fallbackProducts)
+      console.log("Products State (Fallback):", fallbackProducts) // Debug: Log fallback products
       setDemoMode(true)
       setError("Unable to connect to the database. Using demo data instead.")
 
